@@ -146,7 +146,7 @@ impl Spreadsheet {
             }
         }
 
-        print!("\n+-----");
+   //     print!("\n+-----");
 
         // for col in 0..=self.cells[0].len() {
         //     out.execute(MoveTo(col as u16 * self.cell_height as u16, 0))
