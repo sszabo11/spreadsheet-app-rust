@@ -1,13 +1,12 @@
 use crossterm::{
-    cursor::{self}, event::{
-        self, Event, KeyCode, KeyEventKind}, terminal, ExecutableCommand
+    cursor::{self},
+    event::{self, Event, KeyCode, KeyEventKind},
+    terminal, ExecutableCommand,
 };
 use std::io::{stdout, Write};
 mod cell;
 mod spreadsheet;
 use spreadsheet::Spreadsheet;
-
-
 
 fn main() -> Result<(), String> {
     let cell_width = 12;
@@ -15,10 +14,13 @@ fn main() -> Result<(), String> {
 
     let mut spreadsheet = Spreadsheet::new(10, 6, cell_width, cell_height);
     let mut stdout = stdout();
-
-    stdout.execute(terminal::Clear(terminal::ClearType::All)).unwrap();
+    let terminal_size = terminal::size().unwrap();
+    stdout
+        .execute(terminal::Clear(terminal::ClearType::All))
+        .unwrap();
     stdout.execute(cursor::Hide).unwrap();
 
+    println!("{:?}", terminal_size);
     spreadsheet.set_value(0, 0, "line\n2nd line");
     spreadsheet.set_value(0, 1, "B1");
     spreadsheet.set_value(1, 0, "A2");
