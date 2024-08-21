@@ -2,6 +2,7 @@ use std::io::Write;
 
 use crossterm::style::Color;
 
+use crate::formulas::Formula;
 use crate::spreadsheet::{self, Spreadsheet};
 
 pub struct ActiveCell {
@@ -27,7 +28,7 @@ impl ActiveCell {
         spreadsheet.clear_prev(out);
         self.row -= 1;
     }
-    pub fn move_left<W: Write>(&mut self, out:&mut  W, spreadsheet: Spreadsheet) {
+    pub fn move_left<W: Write>(&mut self, out: &mut W, spreadsheet: Spreadsheet) {
         spreadsheet.clear_prev(out);
         self.row -= 1;
     }
@@ -37,4 +38,9 @@ impl ActiveCell {
 pub struct Cell {
     pub value: String,
     pub color: Color,
+    pub formula: Option<Formula>,
 }
+
+// impl Cell {
+//     fn formula(&self, )
+// }

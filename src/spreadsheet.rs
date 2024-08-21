@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{io::Write, usize};
 
 use crossterm::{
     cursor::MoveTo,
@@ -9,7 +9,11 @@ use crossterm::{
     ExecutableCommand,
 };
 
-use crate::cell;
+use crate::{
+    cell,
+    formulas::{letter_pos, Formula, FormulaHandler, FormulaType},
+    spreadsheet,
+};
 
 pub struct Spreadsheet {
     pub cells: Vec<Vec<cell::Cell>>,
@@ -17,18 +21,33 @@ pub struct Spreadsheet {
     pub cell_width: usize,
     pub cell_height: usize,
     pub text_edit: bool,
+    pub fill: bool,
 }
 
 const AXIS_WIDTH: u16 = 5;
 const AXIS_HEIGHT: u16 = 5;
 
 impl Spreadsheet {
-    pub fn new(rows: usize, cols: usize, cell_width: usize, cell_height: usize) -> Self {
+    pub fn new(
+        fill: bool,
+        mut rows: usize,
+        mut cols: usize,
+        cell_width: usize,
+        cell_height: usize,
+    ) -> Self {
+        let (width, height) = terminal::size().unwrap();
+
+        if fill {
+            rows = ((height - AXIS_HEIGHT) / cell_height as u16) as usize;
+            cols = ((width - AXIS_WIDTH) / cell_width as u16) as usize;
+        }
+
         let cells = vec![
             vec![
                 cell::Cell {
                     value: "".to_string(),
                     color: Color::Red,
+                    formula: None
                 };
                 cols
             ];
@@ -41,6 +60,7 @@ impl Spreadsheet {
             cell_width,
             cell_height,
             text_edit: false,
+            fill,
         }
     }
 
@@ -94,6 +114,7 @@ impl Spreadsheet {
         match key {
             KeyCode::Char(c) => {
                 // println!("{}", key);
+
                 let lines = self.cells[self.active_cell.row][self.active_cell.col]
                     .value
                     .split("\n")
@@ -107,6 +128,15 @@ impl Spreadsheet {
                 self.cells[self.active_cell.row][self.active_cell.col]
                     .value
                     .push(c);
+
+                let cell_value = self.cells[self.active_cell.row][self.active_cell.col]
+                    .value
+                    .clone();
+
+                if cell_value.starts_with("=") {
+                    // self.enter_formula(self.active_cell.row, self.active_cell.col);
+                    self.enter_formula(self.active_cell.row, self.active_cell.col);
+                }
             }
 
             KeyCode::Backspace => {
@@ -126,7 +156,7 @@ impl Spreadsheet {
                 .unwrap();
             print!("+");
 
-            for _ in 0..=AXIS_WIDTH  {
+            for _ in 0..=AXIS_WIDTH {
                 print!("-");
             }
 
@@ -146,7 +176,7 @@ impl Spreadsheet {
             }
         }
 
-   //     print!("\n+-----");
+        print!("\n+-----");
 
         // for col in 0..=self.cells[0].len() {
         //     out.execute(MoveTo(col as u16 * self.cell_height as u16, 0))
@@ -180,11 +210,11 @@ impl Spreadsheet {
         print!("Options");
     }
 
-    pub fn draw<W: Write>(&self, out: &mut W) {
+    pub fn draw<W: Write>(&mut self, out: &mut W) {
         // out.execute(terminal::Clear(ClearType::All)).unwrap();
-
         let rows = self.cells.len();
         let cols = if rows > 0 { self.cells[0].len() } else { 0 };
+
         for row in 0..=rows {
             for col in 0..=cols {
                 out.execute(MoveTo(
@@ -241,15 +271,23 @@ impl Spreadsheet {
                     }
                 } else {
                     let lines = content.lines().collect::<Vec<&str>>();
-
+                    let cell = self.cells[row][col].clone();
                     for (i, line) in lines.iter().enumerate() {
                         out.execute(MoveTo(
                             col as u16 * self.cell_width as u16 + 1 as u16 + AXIS_WIDTH,
                             row as u16 * self.cell_height as u16 + i as u16 + 1,
                         ))
                         .unwrap();
-                        let color = self.cells[self.active_cell.row][self.active_cell.col].color;
-                        print!("{}", line.with(color))
+                        let color = cell.color;
+
+                        if let Some(_) = cell.formula {
+                            print!(
+                                "{}",
+                                self.enter_formula(row, col).unwrap_or("Error".to_string())
+                            );
+                        } else {
+                            print!("{}", line.with(color))
+                        }
                     }
                 }
             }
@@ -265,7 +303,7 @@ impl Spreadsheet {
         //     print!("{}, {}", self.active_cell.row, self.active_cell.col);
         // }
 
-        self.draw_options(out);
+        //self.draw_options(out);
     }
 
     pub fn mark_selection<W: Write>(&self, out: &mut W) {
