@@ -25,7 +25,7 @@ pub struct Spreadsheet {
 }
 
 const AXIS_WIDTH: u16 = 5;
-const AXIS_HEIGHT: u16 = 5;
+const AXIS_HEIGHT: u16 = 2;
 
 impl Spreadsheet {
     pub fn new(
@@ -69,7 +69,7 @@ impl Spreadsheet {
         for line in 1..self.cell_height {
             out.execute(MoveTo(
                 self.active_cell.col as u16 * self.cell_width as u16,
-                self.active_cell.row as u16 * self.cell_height as u16 + line as u16,
+                self.active_cell.row as u16 * self.cell_height as u16 + line as u16 + AXIS_HEIGHT,
             ))
             .unwrap();
             out.execute(Clear(ClearType::UntilNewLine)).unwrap();
@@ -172,8 +172,8 @@ impl Spreadsheet {
             }
 
             KeyCode::Tab => {
-                    self.cursor_pos = 0;
-                    self.text_edit = false;
+                self.cursor_pos = 0;
+                self.text_edit = false;
             }
             _ => (),
         }
@@ -185,8 +185,11 @@ impl Spreadsheet {
     }
     pub fn draw_axis<W: Write>(&self, out: &mut W) {
         for row in 0..self.cells.len() {
-            out.execute(MoveTo(0, row as u16 * self.cell_height as u16))
-                .unwrap();
+            out.execute(MoveTo(
+                0,
+                row as u16 * self.cell_height as u16 + AXIS_HEIGHT,
+            ))
+            .unwrap();
             print!("+");
 
             for _ in 0..=AXIS_WIDTH {
@@ -195,14 +198,16 @@ impl Spreadsheet {
 
             out.execute(MoveTo(
                 AXIS_WIDTH / 2,
-                self.cell_height as u16 * row as u16 + self.cell_height as u16 / 2 as u16,
+                self.cell_height as u16 * row as u16
+                    + self.cell_height as u16 / 2 as u16
+                    + AXIS_HEIGHT,
             ))
             .unwrap();
             print!("{}", row + 1);
             for line in 1..self.cell_height {
                 out.execute(MoveTo(
                     0,
-                    row as u16 * self.cell_height as u16 + line as u16,
+                    row as u16 * self.cell_height as u16 + line as u16 + AXIS_HEIGHT,
                 ))
                 .unwrap();
                 print!("|");
@@ -211,27 +216,30 @@ impl Spreadsheet {
 
         print!("\n+-----");
 
-        // for col in 0..=self.cells[0].len() {
-        //     out.execute(MoveTo(col as u16 * self.cell_height as u16, 0))
-        //         .unwrap();
-        //     print!("+");
+        for col in 0..self.cells[0].len() {
+            out.execute(MoveTo(col as u16 * self.cell_width as u16 + AXIS_WIDTH, 0))
+                .unwrap();
+            print!("+");
 
-        //     for _ in 1..=AXIS_HEIGHT - 1 {
-        //         print!("-");
-        //     }
+            for _ in 1..self.cell_width {
+                print!("-");
+            }
 
-        //     out.execute(MoveTo(self.cell_height as u16 * col as u16 + self.cell_height as u16 / 2 as u16, AXIS_HEIGHT / 2))
-        //         .unwrap();
-        //     print!("{}", col);
-        //     for line in 1..self.cell_width {
-        //         out.execute(MoveTo(
-        //
-        //             col as u16 * self.cell_height as u16 + line as u16,0
-        //         ))
-        //         .unwrap();
-        //         print!("|");
-        //     }
-        // }
+            out.execute(MoveTo(
+                col as u16 * self.cell_width as u16 + (self.cell_width / 2) as u16 + AXIS_WIDTH,
+                AXIS_HEIGHT / 2,
+            ))
+            .unwrap();
+            print!("{}", (col as u8 + b'A') as char);
+            for line in 1..AXIS_HEIGHT {
+                out.execute(MoveTo(
+                    col as u16 * self.cell_width as u16 + AXIS_WIDTH,
+                    line as u16,
+                ))
+                .unwrap();
+                print!("|");
+            }
+        }
     }
 
     pub fn draw_options<W: Write>(&self, out: &mut W) {
@@ -252,7 +260,7 @@ impl Spreadsheet {
             for col in 0..=cols {
                 out.execute(MoveTo(
                     (col * self.cell_width) as u16 + AXIS_WIDTH,
-                    (row * self.cell_height) as u16,
+                    (row * self.cell_height) as u16 + AXIS_HEIGHT,
                 ))
                 .unwrap();
                 print!("+");
@@ -267,7 +275,7 @@ impl Spreadsheet {
                     for line_row in 1..self.cell_height {
                         out.execute(MoveTo(
                             (col * self.cell_width) as u16 + AXIS_WIDTH,
-                            (row * self.cell_height + line_row) as u16,
+                            (row * self.cell_height + line_row) as u16 + AXIS_HEIGHT,
                         ))
                         .unwrap();
                         print!("|");
@@ -287,7 +295,7 @@ impl Spreadsheet {
 
                 out.execute(MoveTo(
                     (col * self.cell_width + 1) as u16 + AXIS_WIDTH,
-                    (row * self.cell_height + 1) as u16,
+                    (row * self.cell_height + 1) as u16 + AXIS_HEIGHT,
                 ))
                 .unwrap();
                 if self.active_cell.row == row && self.active_cell.col == col {
@@ -296,7 +304,7 @@ impl Spreadsheet {
                     for (i, line) in lines.iter().enumerate() {
                         out.execute(MoveTo(
                             col as u16 * self.cell_width as u16 + 1 as u16 + AXIS_WIDTH,
-                            row as u16 * self.cell_height as u16 + i as u16 + 1,
+                            row as u16 * self.cell_height as u16 + i as u16 + 1 + AXIS_HEIGHT,
                         ))
                         .unwrap();
                         print!("\x1b[7m{}\x1b[0m", line);
@@ -308,7 +316,7 @@ impl Spreadsheet {
                     for (i, line) in lines.iter().enumerate() {
                         out.execute(MoveTo(
                             col as u16 * self.cell_width as u16 + 1 as u16 + AXIS_WIDTH,
-                            row as u16 * self.cell_height as u16 + i as u16 + 1,
+                            row as u16 * self.cell_height as u16 + i as u16 + 1 + AXIS_HEIGHT,
                         ))
                         .unwrap();
                         let color = cell.color;
@@ -342,7 +350,7 @@ impl Spreadsheet {
         for line in 1..self.cell_height {
             out.execute(MoveTo(
                 ((self.active_cell.col * self.cell_width) + 1) as u16 + AXIS_WIDTH,
-                ((self.active_cell.row * self.cell_height) + line) as u16,
+                ((self.active_cell.row * self.cell_height) + line) as u16 + AXIS_HEIGHT,
             ))
             .unwrap();
             println!("{}", "x".repeat(self.cell_width - 1).on_grey().grey());
