@@ -2,7 +2,6 @@ use std::io::Write;
 
 use crossterm::style::Color;
 
-use crate::formulas::Formula;
 use crate::spreadsheet::{self, Spreadsheet};
 
 pub struct ActiveCell {
@@ -38,7 +37,7 @@ impl ActiveCell {
 pub struct Cell {
     pub value: String,
     pub color: Color,
-    pub formula: Option<Formula>,
+    pub formula: bool,
 }
 
 // impl Cell {

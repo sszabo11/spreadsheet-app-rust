@@ -10,7 +10,7 @@ use crossterm::{
 };
 
 use crate::{
-    cell::{self, Cell},
+    cell,
     formulas::{FormulaHandler, FormulaType},
 };
 
@@ -105,10 +105,6 @@ impl Spreadsheet {
                     }
                 }
                 KeyCode::Enter => {
-                    let cell_len = self.cells[self.active_cell.row][self.active_cell.col]
-                        .value
-                        .len();
-                    self.cursor_pos = cell_len;
                     self.enter_text();
                 }
                 _ => {}
@@ -132,7 +128,6 @@ impl Spreadsheet {
                         .value
                         .push_str("\n")
                 }
-                println!("{}", self.cursor_pos);
                 self.cells[self.active_cell.row][self.active_cell.col]
                     .value
                     .insert(self.cursor_pos, c);
@@ -150,15 +145,14 @@ impl Spreadsheet {
             }
 
             KeyCode::Backspace => {
-                self.cursor_pos -= 1;
                 self.cells[self.active_cell.row][self.active_cell.col]
                     .value
-                    .remove(self.cursor_pos);
+                    .pop();
             }
 
             KeyCode::Left => {
                 if self.cursor_pos != 0 {
-                    self.cursor_pos -= 1;
+                    self.cursor_pos += 1;
                 }
             }
 
@@ -170,19 +164,12 @@ impl Spreadsheet {
                     self.cursor_pos += 1;
                 }
             }
-
-            KeyCode::Tab => {
-                    self.cursor_pos = 0;
-                    self.text_edit = false;
-            }
             _ => (),
         }
 
         self.draw(out);
     }
-    pub fn get_active_cell(&self) -> Cell {
-        self.cells[self.active_cell.row][self.active_cell.col].clone()
-    }
+
     pub fn draw_axis<W: Write>(&self, out: &mut W) {
         for row in 0..self.cells.len() {
             out.execute(MoveTo(0, row as u16 * self.cell_height as u16))
