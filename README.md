@@ -20,8 +20,8 @@ Welcome to the Terminal Spreadsheet App, a Rust-powered, low-level, terminal-bas
 To get started, clone this repository and build the project using Cargo:
 
 ```bash
-git clone https://github.com/sszabo11/spreadsheets.git
-cd spreadsheets
+git clone https://github.com/sszabo11/spreadsheet-app-rust.git
+cd spreadsheet-app-rust
 cargo build --release
 ```
 
