@@ -1,6 +1,9 @@
+pub mod app;
 pub mod cell;
+pub mod command;
+pub mod database;
+pub mod formulas;
+pub mod options;
 pub mod render;
 pub mod spreadsheet;
 pub mod ui;
-pub mod options;
-pub mod formulas;

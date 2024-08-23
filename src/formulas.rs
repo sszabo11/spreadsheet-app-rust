@@ -32,8 +32,6 @@ impl FormulaHandler for Spreadsheet {
     fn parse_range(&self, value: &str) -> Option<String> {
         let range = value.split("(").nth(1)?.strip_suffix(')')?;
 
-        //println!("range: {:?}", range);
-
         if range.contains(":") {
             Some(range.to_string())
         } else {

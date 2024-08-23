@@ -2,15 +2,15 @@ use std::{io::Write, usize};
 
 use crossterm::{
     cursor::MoveTo,
-    event::{KeyCode, ModifierKeyCode},
-    style::Color,
-    style::Stylize,
+    event::{self, Event, KeyCode, KeyEventKind, ModifierKeyCode},
+    style::{Color, Stylize},
     terminal::{self, Clear, ClearType},
     ExecutableCommand,
 };
 
 use crate::{
     cell::{self, Cell},
+    database::Database,
     formulas::{FormulaHandler, FormulaType},
 };
 
@@ -20,27 +20,19 @@ pub struct Spreadsheet {
     pub cell_width: usize,
     pub cell_height: usize,
     pub text_edit: bool,
-    pub fill: bool,
     pub cursor_pos: usize,
+    pub database: Database,
 }
 
 const AXIS_WIDTH: u16 = 5;
 const AXIS_HEIGHT: u16 = 2;
 
 impl Spreadsheet {
-    pub fn new(
-        fill: bool,
-        mut rows: usize,
-        mut cols: usize,
-        cell_width: usize,
-        cell_height: usize,
-    ) -> Self {
+    pub fn new(cell_width: usize, cell_height: usize) -> Self {
         let (width, height) = terminal::size().unwrap();
 
-        if fill {
-            rows = ((height - AXIS_HEIGHT) / cell_height as u16) as usize;
-            cols = ((width - AXIS_WIDTH) / cell_width as u16) as usize;
-        }
+        let rows = ((height - AXIS_HEIGHT) / cell_height as u16) as usize;
+        let cols = ((width - AXIS_WIDTH) / cell_width as u16) as usize;
 
         let cells = vec![
             vec![
@@ -53,15 +45,22 @@ impl Spreadsheet {
             ];
             rows
         ];
-
+        let database = Database::new().unwrap();
         Self {
             cells,
             active_cell: cell::ActiveCell::set(0, 0),
             cell_width,
             cell_height,
             text_edit: false,
-            fill,
             cursor_pos: 0,
+            database,
+        }
+    }
+
+    pub fn focus<W: Write>(&mut self, stdout: &mut W, code: KeyCode) {
+        self.handle_key_press(code, stdout);
+        if self.text_edit {
+            self.write_text(code, stdout)
         }
     }
 
@@ -80,6 +79,13 @@ impl Spreadsheet {
         //
         if !self.text_edit {
             match key {
+                KeyCode::Char(c) => {
+                    println!("{}", c);
+
+                    //if c == ':' {
+                    //    toggle_command(':')
+                    //}
+                }
                 KeyCode::Up => {
                     if self.active_cell.row > 0 {
                         self.clear_prev(out);
