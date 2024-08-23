@@ -1,6 +1,8 @@
 use crate::spreadsheet::{self, Spreadsheet};
 
 pub trait FormulaHandler {
+    fn is_formula(&mut self, value: &str, row: usize, col: usize) -> Option<bool>;
+
     fn enter_formula(&mut self, row: usize, col: usize) -> Option<String>;
 
     fn parse_range(&self, value: &str) -> Option<String>;
@@ -27,6 +29,18 @@ impl FormulaHandler for Spreadsheet {
         self.cells[row][col].formula = true;
         let result = self.evaluate(operation, range).unwrap();
         Some(result)
+    }
+
+    fn is_formula(&mut self, value: &str, row: usize, col: usize) -> Option<bool> {
+        let result = self.enter_formula(row, col);
+
+        let operation = self.parse_operation(&value)?;
+
+        let range_str = self.parse_range(&value)?;
+
+        let range = self.convert_range(&range_str)?;
+
+        Some(true)
     }
 
     fn parse_range(&self, value: &str) -> Option<String> {

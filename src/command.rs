@@ -1,4 +1,4 @@
-use std::io::{stdout, Write};
+use std::io::{stdin, stdout, Write};
 
 use crossterm::{
     cursor::{self, MoveTo, Show},
@@ -25,13 +25,16 @@ impl Command {
         self.draw(stdout);
     }
 
-    pub fn draw<W: Write>(&self, out: &mut W) {
+    pub fn draw<W: Write>(&mut self, out: &mut W) {
         let (_width, height) = terminal::size().unwrap();
 
         out.execute(cursor::MoveTo(0, height)).unwrap();
         out.execute(Clear(ClearType::CurrentLine)).unwrap();
 
         print!("{}", self.input);
+
+        out.execute(cursor::Show).unwrap();
+        //stdin().read_line(&mut self.input).unwrap();
         out.flush().unwrap();
     }
 
@@ -75,4 +78,5 @@ impl Command {
         }
         //self.draw(out);
     }
+    pub fn handle_search(&self) {}
 }

@@ -59,6 +59,44 @@ impl Spreadsheet {
         }
     }
 
+    pub fn load_cells(&mut self, cells: Vec<(String, String)>) {
+        let cells = self.fill_all_cells(cells);
+        self.cells = cells;
+    }
+
+    pub fn fill_all_cells(&mut self, cells: Vec<(String, String)>) -> Vec<Vec<Cell>> {
+        let mut result: Vec<Vec<Cell>> = vec![
+            vec![
+                Cell {
+                    value: String::new(),
+                    color: Color::Red,
+                    formula: false,
+                };
+                self.cells[0].len()
+            ];
+            self.cells.len()
+        ];
+
+        for (key, value) in cells {
+            let parts = key.split(":").collect::<Vec<&str>>();
+            let row = parts[0].parse::<usize>().unwrap();
+            let col = parts[1].parse::<usize>().unwrap();
+            let is_formula = self.is_formula(&value, row, col).unwrap_or(false);
+
+            if row < result.len() && col < result[0].len() {
+                let new_cell = Cell {
+                    formula: is_formula,
+                    value,
+                    color: Color::Red,
+                };
+
+                result[row][col] = new_cell;
+            }
+        }
+
+        result
+    }
+
     pub fn focus<W: Write>(&mut self, stdout: &mut W, code: KeyCode) {
         self.handle_key_press(code, stdout);
         if self.text_edit {

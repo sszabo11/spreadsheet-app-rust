@@ -1,5 +1,7 @@
 use redis::Commands;
 
+use crate::cell::Cell;
+
 pub struct Database {
     conn: Option<redis::Connection>,
     client: redis::Client,
@@ -23,24 +25,35 @@ impl Database {
         Ok(self.conn.as_mut().unwrap())
     }
 
-    pub fn get_cells(&mut self, sheet_id: &str) -> redis::RedisResult<()> {
+    pub fn get_cells(&mut self, sheet_id: &str) -> redis::RedisResult<Vec<(String, String)>> {
         let mut conn = self.get_connection().unwrap();
-        let result: Vec<(usize, usize)> = conn.hgetall(sheet_id)?;
-        println!("Cells: {:?}", result);
+        let result: Vec<(String, String)> = conn.hgetall(sheet_id)?;
 
-        Ok(())
+        //for (key, value) in result {
+        //    println!("Key: {}", key);
+        //    println!("Value: {}", value);
+        //}
+
+        Ok(result)
     }
 
     pub fn write_all_cells(
         &mut self,
         sheet_id: &str,
-        cells: Vec<(String, String)>,
+        cells: Vec<Vec<Cell>>,
     ) -> redis::RedisResult<()> {
         let mut conn = self.get_connection().unwrap();
 
         let mut pipe = redis::Pipeline::new();
-        for (key, value) in cells {
-            pipe.hset(sheet_id, key, value);
+        for row in 0..cells.len() {
+            for col in 0..cells[0].len() {
+                let value = cells[row][col].value.clone();
+                if value.len() > 0 {
+                    let key = format!("{}:{}", row, col);
+                    let sheet_id = format!("spreadsheet:{}", sheet_id);
+                    pipe.hset(sheet_id, key, value);
+                }
+            }
         }
         pipe.exec(&mut conn)?;
 
