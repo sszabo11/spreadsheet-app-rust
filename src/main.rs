@@ -5,6 +5,7 @@ mod formulas;
 mod render;
 mod spreadsheet;
 use render::render_app;
+mod command;
 mod database;
 
 fn main() -> Result<(), String> {

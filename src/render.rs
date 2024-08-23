@@ -3,6 +3,7 @@ use std::io::{stdout, Write};
 use crossterm::{
     cursor,
     event::{self, Event, KeyCode, KeyEventKind},
+    style::Color,
     terminal, ExecutableCommand,
 };
 
@@ -34,12 +35,27 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
                         app.spreadsheet.focus(&mut stdout, key.code);
                     }
                     AppMode::Command => {
-                        //app.command.focus();
+                        app.command.focus(&mut stdout, key.code);
                     }
                 }
                 match key.code {
+                    KeyCode::Char(c) => {
+                        if c == ':' {
+                            app.spreadsheet.select_color = Color::DarkGrey;
+                            app.spreadsheet.draw(&mut stdout);
+                            app.mode = AppMode::Command;
+                            app.command.input.push_str(":");
+                            app.command.draw(&mut stdout);
+                        }
+                    }
                     KeyCode::Esc => break,
-                    _ => (),
+                    _ => {
+                        if app.mode == AppMode::Command && app.command.input.len() == 0 {
+                            app.spreadsheet.select_color = Color::Grey;
+                            app.spreadsheet.draw(&mut stdout);
+                            app.mode = AppMode::Normal
+                        }
+                    }
                 }
             }
         }

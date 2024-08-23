@@ -3,7 +3,7 @@ use std::{io::Write, usize};
 use crossterm::{
     cursor::MoveTo,
     event::{self, Event, KeyCode, KeyEventKind, ModifierKeyCode},
-    style::{Color, Stylize},
+    style::{Color, ResetColor, SetBackgroundColor, Stylize},
     terminal::{self, Clear, ClearType},
     ExecutableCommand,
 };
@@ -16,6 +16,7 @@ use crate::{
 
 pub struct Spreadsheet {
     pub cells: Vec<Vec<cell::Cell>>,
+    pub select_color: Color,
     pub active_cell: cell::ActiveCell,
     pub cell_width: usize,
     pub cell_height: usize,
@@ -48,6 +49,7 @@ impl Spreadsheet {
         let database = Database::new().unwrap();
         Self {
             cells,
+            select_color: Color::Grey,
             active_cell: cell::ActiveCell::set(0, 0),
             cell_width,
             cell_height,
@@ -79,13 +81,6 @@ impl Spreadsheet {
         //
         if !self.text_edit {
             match key {
-                KeyCode::Char(c) => {
-                    println!("{}", c);
-
-                    //if c == ':' {
-                    //    toggle_command(':')
-                    //}
-                }
                 KeyCode::Up => {
                     if self.active_cell.row > 0 {
                         self.clear_prev(out);
@@ -308,15 +303,20 @@ impl Spreadsheet {
                     let lines = content.lines().collect::<Vec<&str>>();
 
                     for (i, line) in lines.iter().enumerate() {
+                        out.execute(ResetColor);
                         out.execute(MoveTo(
                             col as u16 * self.cell_width as u16 + 1 as u16 + AXIS_WIDTH,
                             row as u16 * self.cell_height as u16 + i as u16 + 1 + AXIS_HEIGHT,
                         ))
                         .unwrap();
-                        print!("\x1b[7m{}\x1b[0m", line);
+                        //out.execute(SetBackgroundColor(self.select_color));
+                        //print!("\x1b[7m{}\x1b[0m", line);
+                        out.execute(SetBackgroundColor(self.select_color));
+                        print!("{}", line.black());
                         //print!("{}", line.with(Color::Blue))
                     }
                 } else {
+                    out.execute(ResetColor);
                     let lines = content.lines().collect::<Vec<&str>>();
                     let cell = self.cells[row][col].clone();
                     for (i, line) in lines.iter().enumerate() {
@@ -359,7 +359,12 @@ impl Spreadsheet {
                 ((self.active_cell.row * self.cell_height) + line) as u16 + AXIS_HEIGHT,
             ))
             .unwrap();
-            println!("{}", "x".repeat(self.cell_width - 1).on_grey().grey());
+            out.execute(SetBackgroundColor(self.select_color));
+            println!(
+                "{}",
+                "x".repeat(self.cell_width - 1).with(self.select_color)
+            );
+            out.execute(ResetColor);
         }
     }
 
