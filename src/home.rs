@@ -1,11 +1,15 @@
-use std::io::{stdout, Write};
+use std::io::{stdin, stdout, Write};
 
 use crossterm::cursor::MoveTo;
 use crossterm::style::Stylize;
 use crossterm::terminal::Clear;
 use crossterm::ExecutableCommand;
 
+const WIDTH: u16 = 40;
+const HEIGHT: u16 = 10;
 use crossterm::{event::KeyCode, execute, terminal};
+
+use crate::app::AppState;
 
 pub struct Home {
     pub sheets: Vec<Sheet>,
@@ -26,29 +30,27 @@ impl Home {
 
     pub fn draw<W: Write>(&self, out: &mut W) {
         self.draw_title(out);
-        let width = 40;
-        let height = 10;
         let terminal = terminal::size().unwrap();
         out.execute(MoveTo(
-            terminal.0 / 2 - width / 2,
-            terminal.1 / 2 - height / 2,
+            terminal.0 / 2 - WIDTH / 2,
+            terminal.1 / 2 - HEIGHT / 2,
         ))
         .unwrap();
 
-        let horizontal_line = "-".repeat(width as usize - 2);
+        let horizontal_line = "-".repeat(WIDTH as usize - 2);
         print!("+{}+", horizontal_line);
 
-        for line in 1..height {
+        for line in 1..HEIGHT {
             out.execute(MoveTo(
-                terminal.0 / 2 - width / 2,
-                terminal.1 / 2 - height / 2 + line,
+                terminal.0 / 2 - WIDTH / 2,
+                terminal.1 / 2 - HEIGHT / 2 + line,
             ))
             .unwrap();
-            print!("|{}|", " ".repeat(width as usize - 2));
+            print!("|{}|", " ".repeat(WIDTH as usize - 2));
         }
         out.execute(MoveTo(
-            terminal.0 / 2 - width / 2,
-            terminal.1 / 2 - height / 2 + height,
+            terminal.0 / 2 - WIDTH / 2,
+            terminal.1 / 2 - HEIGHT / 2 + HEIGHT,
         ))
         .unwrap();
         print!("+{}+", horizontal_line);
@@ -57,13 +59,13 @@ impl Home {
             .unwrap();
         for (i, sheet) in self.sheets.iter().enumerate() {
             out.execute(MoveTo(
-                terminal.0 / 2 - width / 2 + 3,
-                terminal.1 / 2 - height / 2 + 2 + i as u16,
+                terminal.0 / 2 - WIDTH / 2 + 3,
+                terminal.1 / 2 - HEIGHT / 2 + 2 + i as u16,
             ))
             .unwrap();
             if self.selected == i {
                 print!("{}", sheet.name.clone().on_grey().black());
-                println!("{}<", " ".repeat(width as usize - 6 - sheet.name.len()));
+                println!("{}<", " ".repeat(WIDTH as usize - 6 - sheet.name.len()));
             } else {
                 println!("{}", sheet.name);
             }
@@ -109,9 +111,26 @@ impl Home {
                 self.draw(out);
             }
 
+            KeyCode::Char(c) => match c {
+                //'+' => self.create_sheet(out, app),
+                _ => {}
+            },
+
             KeyCode::Enter => {}
             _ => {}
         }
+    }
+
+    pub fn create_sheet<W: Write>(&self, out: &mut W) -> String {
+        let (width, height) = terminal::size().unwrap();
+        out.execute(MoveTo(width / 2, height / 2 - 4));
+        let mut name = String::new();
+        stdin().read_line(&mut name).unwrap();
+        let name = name.trim();
+
+        println!("{}", name);
+
+        name.to_string()
     }
 }
 

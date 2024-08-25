@@ -29,8 +29,19 @@ impl AppState {
             database,
             spreadsheet,
             command,
-            mode: AppMode::Normal,
+            mode: AppMode::Home,
         }
+    }
+
+    pub fn load_sheet<W: Write>(&mut self, stdout: &mut W, sheet: &str) {
+        self.spreadsheet.id = sheet.to_string();
+        self.open_sheet(stdout);
+        let cells = self
+            .database
+            .get_cells(&format!("spreadsheet:{}", sheet))
+            .unwrap();
+        self.spreadsheet.load_cells(cells);
+        self.spreadsheet.draw(stdout);
     }
     pub fn clear_screen<W: Write>(&self, stdout: &mut W) {
         let (width, height) = terminal::size().unwrap();

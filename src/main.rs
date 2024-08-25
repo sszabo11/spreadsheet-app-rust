@@ -1,3 +1,4 @@
+#![allow(warnings)]
 mod app;
 mod cell;
 use app::AppState;

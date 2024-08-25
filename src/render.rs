@@ -34,7 +34,8 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
 
     app.spreadsheet.load_cells(cells);
 
-    app.spreadsheet.draw(&mut stdout);
+    //app.spreadsheet.draw(&mut stdout);
+    app.home.draw(&mut stdout);
     stdout.flush().unwrap();
     loop {
         if let Event::Key(key) = event::read().unwrap() {
@@ -51,15 +52,27 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
                     }
                 }
                 match key.code {
-                    KeyCode::Char(c) => {
-                        if c == ':' {
+                    KeyCode::Char(c) => match c {
+                        ':' => {
                             app.spreadsheet.select_color = Color::DarkGrey;
                             app.spreadsheet.draw(&mut stdout);
                             app.mode = AppMode::Command;
                             app.command.input.push_str(":");
                             app.command.draw(&mut stdout);
                         }
-                    }
+                        '+' => {
+                            if app.mode == AppMode::Home {
+                                let name = app.home.create_sheet(&mut stdout);
+                                print!("{}", name);
+                                app.database.create_sheet(&name);
+                                let sheets = app.database.get_sheets().unwrap();
+                                app.home.sheets = sheets;
+
+                                app.load_sheet(&mut stdout, &name);
+                            }
+                        }
+                        _ => {}
+                    },
                     KeyCode::Enter => match app.mode {
                         AppMode::Home => {
                             app.open_sheet(&mut stdout);

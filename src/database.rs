@@ -26,6 +26,14 @@ impl Database {
         }
         Ok(self.conn.as_mut().unwrap())
     }
+
+    pub fn create_sheet(&mut self, name: &str) -> redis::RedisResult<()> {
+        let conn = self.get_connection().unwrap();
+        let result: i32 = conn.lpush("spreadsheets", name).unwrap();
+
+        Ok(())
+    }
+
     pub fn get_sheets(&mut self) -> redis::RedisResult<Vec<Sheet>> {
         let conn = self.get_connection().unwrap();
 
