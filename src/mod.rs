@@ -3,6 +3,7 @@ pub mod cell;
 pub mod command;
 pub mod database;
 pub mod formulas;
+pub mod home;
 pub mod options;
 pub mod render;
 pub mod spreadsheet;

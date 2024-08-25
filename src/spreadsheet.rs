@@ -15,6 +15,7 @@ use crate::{
 };
 
 pub struct Spreadsheet {
+    pub id: String,
     pub cells: Vec<Vec<cell::Cell>>,
     pub select_color: Color,
     pub active_cell: cell::ActiveCell,
@@ -48,6 +49,7 @@ impl Spreadsheet {
         ];
         let database = Database::new().unwrap();
         Self {
+            id: "Profits".to_string(),
             cells,
             select_color: Color::Grey,
             active_cell: cell::ActiveCell::set(0, 0),
@@ -159,8 +161,6 @@ impl Spreadsheet {
     pub fn write_text<W: Write>(&mut self, key: crossterm::event::KeyCode, out: &mut W) {
         match key {
             KeyCode::Char(c) => {
-                // println!("{}", key);
-
                 let lines = self.cells[self.active_cell.row][self.active_cell.col]
                     .value
                     .split("\n")
@@ -171,12 +171,16 @@ impl Spreadsheet {
                         .value
                         .push_str("\n")
                 }
-                println!("{}", self.cursor_pos);
-                self.cells[self.active_cell.row][self.active_cell.col]
+                if self.cells[self.active_cell.row][self.active_cell.col]
                     .value
-                    .insert(self.cursor_pos, c);
+                    .is_char_boundary(self.cursor_pos)
+                {
+                    self.cells[self.active_cell.row][self.active_cell.col]
+                        .value
+                        .insert(self.cursor_pos, c);
 
-                self.cursor_pos += 1;
+                    self.cursor_pos += 1;
+                }
 
                 let cell_value = self.cells[self.active_cell.row][self.active_cell.col]
                     .value

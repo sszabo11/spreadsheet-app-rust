@@ -7,7 +7,7 @@ mod spreadsheet;
 use render::render_app;
 mod command;
 mod database;
-
+mod home;
 fn main() -> Result<(), String> {
     let cell_width = 12;
     let cell_height = 3;

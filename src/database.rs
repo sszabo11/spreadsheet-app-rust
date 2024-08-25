@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
+
 use redis::Commands;
 
-use crate::cell::Cell;
+use crate::{cell::Cell, home::Sheet};
 
 pub struct Database {
     conn: Option<redis::Connection>,
@@ -24,7 +26,18 @@ impl Database {
         }
         Ok(self.conn.as_mut().unwrap())
     }
+    pub fn get_sheets(&mut self) -> redis::RedisResult<Vec<Sheet>> {
+        let conn = self.get_connection().unwrap();
 
+        let sheets: Vec<String> = conn.lrange("spreadsheets", 0, -1)?;
+
+        Ok(sheets
+            .iter()
+            .map(|name| Sheet {
+                name: name.to_string(),
+            })
+            .collect())
+    }
     pub fn get_cells(&mut self, sheet_id: &str) -> redis::RedisResult<Vec<(String, String)>> {
         let mut conn = self.get_connection().unwrap();
         let result: Vec<(String, String)> = conn.hgetall(sheet_id)?;

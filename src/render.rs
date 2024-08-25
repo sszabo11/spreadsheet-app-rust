@@ -26,13 +26,16 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
     //app.spreadsheet.set_value(1, 3, "7");
     //app.spreadsheet.set_value(1, 0, "A2");
     //app.spreadsheet.set_value(1, 1, "B2");
-    let cells = app.database.get_cells("spreadsheet:1").unwrap();
+    let sheet = app.spreadsheet.id.clone();
+    let cells = app
+        .database
+        .get_cells(&format!("spreadsheet:{}", sheet))
+        .unwrap();
 
     app.spreadsheet.load_cells(cells);
 
     app.spreadsheet.draw(&mut stdout);
     stdout.flush().unwrap();
-    app.database.get_cells("spreadsheet:1").unwrap();
     loop {
         if let Event::Key(key) = event::read().unwrap() {
             if key.kind == KeyEventKind::Press {
@@ -42,6 +45,9 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
                     }
                     AppMode::Command => {
                         app.command.focus(&mut stdout, key.code);
+                    }
+                    AppMode::Home => {
+                        app.home.focus(&mut stdout, key.code);
                     }
                 }
                 match key.code {
@@ -54,14 +60,35 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
                             app.command.draw(&mut stdout);
                         }
                     }
-                    KeyCode::Enter => {
-                        if app.command.input.starts_with(":") {
-                            app.handle_command()
-                        } else if app.command.input.starts_with("/") {
-                            app.handle_search()
+                    KeyCode::Enter => match app.mode {
+                        AppMode::Home => {
+                            app.open_sheet(&mut stdout);
+                            let sheet = app.spreadsheet.id.clone();
+                            let cells = app
+                                .database
+                                .get_cells(&format!("spreadsheet:{}", sheet))
+                                .unwrap();
+                            app.spreadsheet.load_cells(cells);
+                            app.spreadsheet.draw(&mut stdout);
+                        }
+                        _ => {
+                            if app.command.input.starts_with(":") {
+                                app.handle_command()
+                            } else if app.command.input.starts_with("/") {
+                                app.handle_search()
+                            }
+                        }
+                    },
+                    KeyCode::Esc => {
+                        if app.mode == AppMode::Home {
+                            break;
+                        } else {
+                            //app.home.focus(&mut stdout, key.code);
+                            app.clear_screen(&mut stdout);
+                            app.mode = AppMode::Home;
+                            app.home.draw(&mut stdout);
                         }
                     }
-                    KeyCode::Esc => break,
                     _ => {
                         if app.mode == AppMode::Command && app.command.input.len() == 0 {
                             app.spreadsheet.select_color = Color::Grey;
