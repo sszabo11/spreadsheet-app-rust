@@ -2,21 +2,22 @@
 
 # 📝 Terminal Spreadsheet App 🦀
 
-Welcome to the Terminal Spreadsheet App, a Rust-powered, low-level, terminal-based spreadsheet application! 🚀
+Terminal spreadsheet app! 🚀
 
 ## 🎉 Features
 
 - **Keyboard Navigation**: Use arrow keys to move between cells effortlessly.
-- **Custom Cell Colors**: Highlight cells with custom colors for better visibility.
 - **Text Editing**: Enter and edit text directly in any cell.
 - **Minimal Flicker**: Optimized rendering to minimize flicker during screen updates.
 - **Simple formulas**: Currently Sum and Product formulas work to a range of cells.
 - **Commands (In progress)**: Enter command mode to execute tasks. Currently, only `:w` (save) works.
 - **Save and load cells from database**: Automatically loads cell data from the database and saves it using the `:w` command.
+- **View create and delete sheets**: Home page shows all sheets and ability to create or delete spreadsheets.
 
 ## 🏗️ Still working progress
 - I still want to include all the future features listed below
-- Still very buggy
+- Still a bit buggy
+- May not work on all terminals
 
 ## 🛠️ Installation
 
@@ -40,7 +41,6 @@ cargo run --release
 ```
 
 ## 🔮 Future Features
-- **Home screen to view sheets:** List of sheets and ability to create or edit.
 - **Complex formulas:** Support for advanced formulas.
 - **Styling:** Apply different styles to cells (bold, italic, etc.).
 - **Import Excel Sheets:** Import existing Excel sheets into the terminal app.
@@ -52,6 +52,8 @@ cargo run --release
 - **Backspace:** Delete characters in the selected cell.
 - **Esc:** Exit the application.
 - **Tab:** To escape edit mode
+- **+:** To create new sheet in home
+- **_:** Delete sheet in home
 
 ## 📦 Dependencies
 This project uses the following crates:
