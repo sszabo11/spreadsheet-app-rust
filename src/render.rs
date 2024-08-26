@@ -60,6 +60,15 @@ pub fn render_app(app: &mut AppState) -> Result<(), String> {
                             app.command.input.push_str(":");
                             app.command.draw(&mut stdout);
                         }
+                        '_' => {
+                            if app.mode == AppMode::Home {
+                                let sheet = app.home.sheets[app.home.selected].name.clone();
+                                app.database.delete_sheet(&sheet);
+                                let sheets = app.database.get_sheets().unwrap();
+                                app.home.sheets = sheets;
+                                app.home.draw(&mut stdout);
+                            }
+                        }
                         '+' => {
                             if app.mode == AppMode::Home {
                                 let name = app.home.create_sheet(&mut stdout);

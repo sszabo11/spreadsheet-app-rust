@@ -46,6 +46,13 @@ impl Database {
             })
             .collect())
     }
+
+    pub fn delete_sheet(&mut self, sheet: &str) {
+        let conn = self.get_connection().unwrap();
+
+        let result: i32 = conn.lrem("spreadsheets", 1, sheet).unwrap();
+    }
+
     pub fn get_cells(&mut self, sheet_id: &str) -> redis::RedisResult<Vec<(String, String)>> {
         let mut conn = self.get_connection().unwrap();
         let result: Vec<(String, String)> = conn.hgetall(sheet_id)?;
